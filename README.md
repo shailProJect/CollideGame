@@ -21,7 +21,7 @@ To run the game locally, follow these steps:
     
     Copy code
     
-    `git clone https://github.com/yourusername/super-max-game.git` 
+    `git clone https://github.com/shailProJect/CollideGame/blob/main/Games/CollideWith.html` 
     
 2.  **Navigate to the Project Directory**
     
@@ -90,11 +90,3 @@ If you want to contribute to this project, you can:
     
     Go to the original repository and create a pull request from your fork.
     
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For any questions or suggestions, please contact [your email address or GitHub profile link].
