@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Max</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #87CEFA; /* Light blue background */
+    font-family: Arial, sans-serif; /* Set font for better readability */
+}
+
+.game-container {
+    width: 800px; /* Fixed width for a better layout */
+    height: 600px; /* Fixed height to contain the game */
+    position: relative;
+    background-color: #f0f8ff; /* Slightly different background for the game area */
+    border: 2px solid #000; /* Border around the game area */
+    overflow: hidden;
+}
+
+#super-max {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 100px;
+    transition: bottom 0.3s ease-in-out, left 0.1s ease-in-out;
+}
+
+.jumping {
+    bottom: 150px; /* Adjust the height of the jump */
+}
+
+.insect {
+    position: absolute;
+    width: 40px; /* Slightly larger insects */
+    height: 40px;
+    background-color: #ff6347; /* Tomato color for the insects */
+    border-radius: 50%;
+    transition: opacity 0.3s; /* Smooth transition for visibility change */
+}
+
+.counter, .timer {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: #333; /* Darker color for better contrast */
+}
+
+.timer {
+    top: 50px; /* Position it lower than the collision counter */
+}
+
+/* Add a subtle shadow effect to the insects */
+.insect-shadow {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+</style>
+<body>
+    <div class="game-container">
+        <div id="super-max">
+            <svg id="character" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+                <!-- Body -->
+                <rect x="35" y="40" width="30" height="40" fill="blue"/>
+                <!-- Head -->
+                <circle cx="50" cy="30" r="15" fill="peachpuff"/>
+                <!-- Cap -->
+                <rect x="35" y="15" width="30" height="10" fill="red"/>
+                <rect x="30" y="25" width="40" height="5" fill="red"/>
+                <!-- Eyes -->
+                <circle cx="45" cy="30" r="3" fill="black"/>
+                <circle cx="55" cy="30" r="3" fill="black"/>
+                <!-- Mustache -->
+                <rect x="40" y="35" width="20" height="3" fill="brown"/>
+                <!-- Legs -->
+                <rect x="35" y="80" width="10" height="20" fill="blue"/>
+                <rect x="55" y="80" width="10" height="20" fill="blue"/>
+                <!-- Shoes -->
+                <rect x="33" y="95" width="14" height="5" fill="brown"/>
+                <rect x="53" y="95" width="14" height="5" fill="brown"/>
+            </svg>
+        </div>
+        <!-- Counter display -->
+        <div class="counter" id="collision-count">Collisions: 0</div>
+        <!-- Timer display -->
+        <div class="timer" id="timer">Time: 60</div>
+        <!-- Multiple insect elements -->
+        <div class="insect insect-shadow" id="insect1"></div>
+        <div class="insect insect-shadow" id="insect2"></div>
+        <div class="insect insect-shadow" id="insect3"></div>
+        <div class="insect insect-shadow" id="insect4"></div>
+    </div>
+    <script>
+  const character = document.getElementById("super-max");
+const insects = Array.from(document.querySelectorAll(".insect"));
+const collisionCountElem = document.getElementById("collision-count");
+const timerElem = document.getElementById("timer");
+let isJumping = false;
+let collisionCount = 0;
+let characterSpeed = 70;  // Initial speed
+let gameRunning = true;
+
+// Initialize a flag for each insect to check if it has already been counted
+const insectCollisionFlags = insects.map(() => false);
+
+document.addEventListener("keydown", (event) => {
+    if (!gameRunning) return;  // Prevent movement if the game is over
+
+    const key = event.key;
+    const left = parseInt(window.getComputedStyle(character).left);
+
+    // Left and Right movement
+    if (key === "ArrowLeft" && left > 0) {
+        character.style.left = `${left - characterSpeed}px`;
+    } else if (key === "ArrowRight" && left < window.innerWidth - 100) {
+        character.style.left = `${left + characterSpeed}px`;
+    }
+
+    // Jump action
+    if (key === "ArrowUp" && !isJumping) {  // Up arrow key for jumping
+        isJumping = true;
+        character.classList.add("jumping");
+
+        setTimeout(() => {
+            character.classList.remove("jumping");
+            isJumping = false;
+        }, 600);  // Duration of the jump animation
+    }
+});
+
+function moveInsects() {
+    const insectSpeed = 2;  // Speed at which the insects move
+
+    insects.forEach((insect, index) => {
+        let insectBottom = -40;  // Start below the visible area
+        const insectWidth = insect.offsetWidth;
+
+        function updatePosition() {
+            if (!gameRunning) return;  // Prevent movement if the game is over
+
+            insectBottom += insectSpeed;
+            if (insectBottom > window.innerHeight) {
+                insectBottom = -40;  // Reset insect position above the screen
+                insect.style.left = `${Math.random() * (window.innerWidth - insectWidth)}px`;
+                insect.style.opacity = 1;  // Make insect visible again
+                insectCollisionFlags[index] = false;  // Reset collision flag
+            }
+            insect.style.bottom = `${insectBottom}px`;
+
+            // Check for collision
+            const characterRect = character.getBoundingClientRect();
+            const insectRect = insect.getBoundingClientRect();
+
+            if (insectRect.right > characterRect.left && insectRect.left < characterRect.right &&
+                insectRect.bottom > characterRect.top && insectRect.top < characterRect.bottom) {
+                if (!insectCollisionFlags[index]) {
+                    collisionCount++;
+                    collisionCountElem.textContent = `Collisions: ${collisionCount}`;
+                    insect.style.opacity = 0;  // Make insect invisible
+                    insectCollisionFlags[index] = true;  // Set flag to prevent multiple counts
+                    characterSpeed += 2;  // Increase the speed of the character
+                    character.style.transition = 'left 0.05s ease-in-out';  // Make speed change noticeable
+                }
+            }
+        }
+
+        setInterval(updatePosition, 20);
+    });
+}
+
+function startTimer() {
+    let timeRemaining = 60;  // 1 minute
+    timerElem.textContent = `Time: ${timeRemaining}`;
+    const timerInterval = setInterval(() => {
+        if (!gameRunning) {
+            clearInterval(timerInterval);  // Stop the timer if the game is over
+            return;
+        }
+        timeRemaining--;
+        timerElem.textContent = `Time: ${timeRemaining}`;
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
+            endGame();
+        }
+    }, 1000);
+}
+
+function endGame() {
+    gameRunning = false;
+    document.querySelectorAll(".insect").forEach(insect => insect.style.opacity = 0);  // Hide all insects
+    character.style.transition = 'none';  // Remove transition
+    // Optionally, you can add more end game logic here, such as displaying a game over message
+    setTimeout(() => alert("Game Over!"), 100);  // Brief delay to ensure all transitions are completed
+}
+
+moveInsects();  // Start moving the insects
+startTimer();  // Start the timer
+
+    </script>
+</body>
+</html>
